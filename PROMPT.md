@@ -81,16 +81,23 @@ NARRATION SCRIPT FORMAT
     the words of each beat against the subtitle cues.
 
 SCENES
-25. "scenes" is an ARRAY of short clips, each one 2 to 4 seconds long. The part is a
-    montage of these clips, so only a few seconds of the film is ever shown.
-26. Every scene must be inside the part's own start_timestamp and end_timestamp, must not
-    overlap another scene, and must be listed in the order it is shown.
-27. List enough scenes to cover the whole narration, and no more: a 90 second narration
-    needs 30 clips of 3 seconds, whether the segment is one minute or half an hour long.
-    When the scenes are too short the tool repeats the last ones, which is the worst case.
-28. Every scene after the first shows the moment its beat talks about, and the scenes
-    must follow the order of "narration_script". Spread the scenes over the whole segment
-    instead of bunching them at its start.
+25. "scenes" is an ARRAY of clips, listed in the order they are shown, and it holds one
+    clip per element of "narration_script", in the same order. Every beat is played over
+    its own clip, so the picture changes exactly when the narrator moves on.
+26. The length of a clip is NOT yours to decide. The tool already knows how long every
+    beat takes to speak and cuts each clip to fit, so a fixed length in your answer is
+    ignored. Do not pad the clips to a target number of seconds and do not list more
+    clips than beats: the extra ones are dropped and the picture falls behind.
+27. What you decide is WHERE each clip starts: put it on the moment its beat talks about,
+    and copy that cue's timestamps from the cues above. A clip that is one frame off the
+    line it belongs to is what makes the recap look wrong.
+28. Every scene must start inside the part's own start_timestamp and end_timestamp, must
+    not overlap another scene, and must be listed in the order it is shown.
+29. end_timestamp is optional and only a hint for a natural cut. If you leave it out, the
+    tool ends the clip when the beat is finished. Leave it out unless you know the line
+    that ends right there.
+30. Spread the clips over the whole segment instead of bunching them at its start. The
+    part is a montage, so a long stretch of film can be skipped over.
 
 OUTPUT SCHEMA
 Two parts of very different lengths, which is what a good segmentation looks like:
@@ -106,10 +113,10 @@ Two parts of very different lengths, which is what a good segmentation looks lik
       "Then the elders drop the truth about the dragon."
     ],
     "scenes": [
-      {"start_timestamp": "00:15:12,400", "end_timestamp": "00:15:15,400"},
-      {"start_timestamp": "00:15:44,900", "end_timestamp": "00:15:47,900"},
-      {"start_timestamp": "00:16:20,100", "end_timestamp": "00:16:23,100"},
-      {"start_timestamp": "00:16:41,700", "end_timestamp": "00:16:44,700"}
+      {"start_timestamp": "00:15:12,400"},
+      {"start_timestamp": "00:15:44,900"},
+      {"start_timestamp": "00:16:20,100"},
+      {"start_timestamp": "00:16:41,700"}
     ],
     "narration_timestamps": [
       "00:15:12,400",
@@ -131,11 +138,11 @@ Two parts of very different lengths, which is what a good segmentation looks lik
       "By nightfall the towers of the buried city rise out of the sand."
     ],
     "scenes": [
-      {"start_timestamp": "00:41:20,000", "end_timestamp": "00:41:23,000"},
-      {"start_timestamp": "00:47:05,600", "end_timestamp": "00:47:08,600"},
-      {"start_timestamp": "00:55:31,200", "end_timestamp": "00:55:34,200"},
-      {"start_timestamp": "01:02:12,800", "end_timestamp": "01:02:15,800"},
-      {"start_timestamp": "01:10:40,100", "end_timestamp": "01:10:43,100"}
+      {"start_timestamp": "00:41:20,000"},
+      {"start_timestamp": "00:47:05,600"},
+      {"start_timestamp": "00:55:31,200"},
+      {"start_timestamp": "01:02:12,800"},
+      {"start_timestamp": "01:10:40,100"}
     ],
     "hook": "Twelve words or fewer."
   }

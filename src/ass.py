@@ -9,11 +9,11 @@ from .logutil import log
 from .srt import Cue
 
 FONT_NAME = "Coolvetica"
-SUB_SIZE = 64
-HOOK_SIZE = 70
+SUB_SIZE = 55
+HOOK_SIZE = 60
 HOOK_TOP_MARGIN = 140
-SUB_BOTTOM_MARGIN = 500
-MAX_LINE_CHARS = 28
+SUB_BOTTOM_MARGIN = 520
+MAX_LINE_CHARS = 30
 
 HEADER = """[Script Info]
 ScriptType: v4.00+

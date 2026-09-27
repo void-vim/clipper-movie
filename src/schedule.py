@@ -12,6 +12,8 @@ from .srt import Cue
 
 BEAT_GAP = 0.6
 LEAD = 0.4
+# Clips and placements are rounded to milliseconds, so a hair of slack is not a gap.
+SLACK = 0.2
 
 
 @dataclass(frozen=True)
@@ -38,7 +40,7 @@ def cover(scenes: list[tuple[float, float]], needed: float) -> list[tuple[float,
     out = list(scenes)
     one = sum(e - s for s, e in scenes)
     total = one
-    while total < needed:
+    while total < needed - SLACK:
         out.extend(scenes)
         total += one
     if len(out) > len(scenes):
@@ -49,7 +51,7 @@ def cover(scenes: list[tuple[float, float]], needed: float) -> list[tuple[float,
 def fit(scenes: list[tuple[float, float]], needed: float) -> list[tuple[float, float]]:
     """Montage long enough for the narration, without unused clips at the end."""
     out = cover(scenes, needed)
-    while len(out) > 1 and scene_offsets(out)[-1] >= needed:
+    while len(out) > 1 and scene_offsets(out)[-1] >= needed - SLACK:
         out = out[:-1]
     return out
 

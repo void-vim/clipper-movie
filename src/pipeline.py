@@ -20,13 +20,15 @@ from .media import MediaInfo, probe
 from .mixer import PlacedBeat, mux_narration, write_narration_audio
 from .parts import Part
 from .render import render_montage
-from .scenes import UNANCHORED, from_anchors, spread
+from .scenes import UNANCHORED, beat_lengths, from_anchors, spread
 from .schedule import scene_offsets
 from .shortform import render_vertical
 from .srt import Cue, dump_srt, format_timestamp as srt_stamp
 from .tts import BeatClip, synthesize_beats
 
 TAIL = 0.8
+# Clips are rounded to milliseconds, so the montage can miss the narration by a hair.
+SLACK = 0.2
 
 
 @dataclass
@@ -133,46 +135,64 @@ def generate_narrations(results: list[PartResult], cues: list[Cue],
 
 
 def _fit_scenes(result: PartResult, cues: list[Cue], settings: Settings) -> None:
-    """Line up the beats with the scene clips, adding or repeating clips to fill."""
+    """Cut one clip per beat, each as long as the beat it carries takes to speak."""
     beats = [c.text for c in result.clips]
     durations = [c.duration for c in result.clips]
-    listed = list(result.part.scenes)
+    lengths = beat_lengths(durations, settings.scene_pad, settings.scene_min,
+                           settings.scene_max, tail=TAIL)
+    listed = _open_with_head(_build_clips(result, cues, lengths, settings),
+                              settings.narration_delay)
     placed = schedule.place(beats, durations, listed, settings.narration_delay)
     needed = schedule.total_length(placed, settings.narration_delay, TAIL)
     have = sum(e - s for s, e in listed)
-    if have < needed:
+    if have < needed - SLACK:  # millimetre rounding must not add a clip
         listed = _add_scenes(result, cues, listed, settings, needed)
     scenes = schedule.fit(listed, needed)
-    if scenes != result.part.scenes:
+    if scenes != listed:
         placed = schedule.place(beats, durations, scenes, settings.narration_delay)
     result.scenes = scenes
     result.placed = [PlacedBeat(p.text, c.path, p.start, p.duration)
                      for p, c in zip(placed, result.clips)]
 
 
-def _add_scenes(result: PartResult, cues: list[Cue], listed: list[tuple[float, float]],
-                settings: Settings, needed: float) -> list[tuple[float, float]]:
-    """Add unused scene clips from the part until the montage can hold the narration."""
+def _open_with_head(clips: list[tuple[float, float]], delay: float) -> list[tuple[float, float]]:
+    """The opening silence needs footage too: the first shot, held for `delay` seconds."""
+    if delay <= 0 or not clips:
+        return clips
+    start = clips[0][0]
+    return [(start, round(start + delay, 3)), *clips]
+
+
+def _build_clips(result: PartResult, cues: list[Cue], lengths: list[float],
+                 settings: Settings) -> list[tuple[float, float]]:
+    """One clip per beat: at the scene the plan listed, or on the line the beat quotes."""
     part = result.part
     window = [c for c in cues if c.end > part.start and c.start < part.end]
     anchors = list(part.anchors) if len(part.anchors) == len(part.beats) else []
     if not anchors:
         anchors = [UNANCHORED] * len(part.beats)
+    return from_anchors(anchors, list(part.beats), window, part.start, part.end,
+                        lengths, starts=list(part.scenes))
+
+
+def _add_scenes(result: PartResult, cues: list[Cue], listed: list[tuple[float, float]],
+                settings: Settings, needed: float) -> list[tuple[float, float]]:
+    """Add unused scene clips at the end until the montage can hold the narration."""
+    part = result.part
+    window = [c for c in cues if c.end > part.start and c.start < part.end]
     out = list(listed)
     for _ in range(4):
         have = sum(e - s for s, e in out)
         if have >= needed:
             break
-        # Snapped clips are often a little shorter than asked for, so ask for extra.
-        want = math.ceil((needed - have) / max(0.5, settings.scene_seconds)) + 2
-        pool = from_anchors(anchors, list(part.beats), window, part.start, part.end,
-                            settings.scene_seconds)
-        pool += spread(window, want, settings.scene_seconds, part.start, part.end)
-        fresh = [s for s in pool if s not in out]
+        size = min(settings.scene_max, max(settings.scene_min, (needed - have) / 2))
+        want = math.ceil((needed - have) / size) + 1
+        fresh = [s for s in spread(window, want, size, part.start, part.end)
+                 if s not in out]
         if not fresh:
             break
         out.extend(fresh)
-    log("INFO", f"  part_{part.index:02d} scenes: {len(listed)} listed, "
+    log("INFO", f"  part_{part.index:02d} scenes: {len(result.part.scenes)} listed, "
                 f"{len(out)} used for a {needed:.0f}s narration")
     return out
 
@@ -255,7 +275,8 @@ def write_manifest(settings: Settings, results: list[PartResult], info: MediaInf
         "mode": "short",
         "tts_engine": settings.tts_engine,
         "narration_delay_seconds": settings.narration_delay,
-        "scene_seconds": settings.scene_seconds,
+        "scene_clip_seconds": {"pad": settings.scene_pad, "min": settings.scene_min,
+                               "max": settings.scene_max},
         "parts": [r.to_dict() for r in results],
         "warnings": settings.warnings,
     }

@@ -92,10 +92,11 @@ narration delay, caption font).
    length targets live in `PROMPT.md`.
 3. `src/tts.py` speaks each beat separately with Chatterbox (optionally cloning a
    reference voice) and records its timing, so every beat becomes one subtitle caption.
-4. `src/scenes.py` decides the clips a part shows: the `scenes` array of the plan, or one
-   clip of `scene_seconds` around the line each beat quotes. `src/schedule.py` starts
-   beat i on scene i, repeats clips when the recap outlasts them, and drops the clips the
-   recap never reaches.
+4. `src/scenes.py` decides the clips a part shows: one clip per narration beat, starting
+   on the `scenes` entry of the plan or on the line the beat quotes, and cut as long as
+   that beat takes to speak, so the picture changes exactly when the narrator does.
+   `src/schedule.py` starts beat i on clip i, and holds the first shot for the opening
+   delay so nothing drifts.
 5. `src/render.py` concatenates the clips into one silent montage, `src/mixer.py` drops
    the movie audio and lays the beats on that timeline, and `src/shortform.py` renders
    the vertical versions. `src/pipeline.py` writes the subtitles and the manifest.
@@ -135,7 +136,7 @@ Only the video and the subtitle are arguments. The rest is hardcoded in `src/con
 | `tts_engine` | `chatterbox` | set to `silent` for pipeline testing only |
 | `ref_audio` | none | reference wav to clone the narrator voice |
 | `device` | `cpu` | TTS device (`cuda` is much faster) |
-| `scene_seconds` | 3.0 | length of a scene clip when the plan does not list them |
+| `scene_pad` / `scene_min` / `scene_max` | 0.6 / 1.2 / 12.0 | a scene clip runs as long as its beat speaks, plus `scene_pad`, bounded by the two others |
 | `narration_delay` | 1.0 | earliest a beat may start, the rest follow their scenes |
 | `font_dir` | `input/font` | caption font directory |
 

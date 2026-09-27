@@ -28,7 +28,10 @@ class Settings:
     temperature: float = 0.8
     narration_delay: float = 1.0
     narration_words: int = 200
-    scene_seconds: float = 3.0
+    # A scene clip is as long as the beat it carries: these only bound it.
+    scene_pad: float = 0.6
+    scene_min: float = 1.2
+    scene_max: float = 12.0
     font_dir: Path | None = None
     keep_going: bool = False
     debug: bool = False

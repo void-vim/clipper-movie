@@ -66,7 +66,8 @@ def plan(settings: Settings, duration: float) -> list[Part]:
         log("INFO", f"Segmenting on dialogue boundaries, target {target:.0f}s per part")
         parts = heuristic.to_parts(
             cues, duration, settings.min_part, settings.max_part, target,
-            settings.narration_words, settings.scene_seconds,
+            settings.narration_words, settings.scene_pad, settings.scene_min,
+            settings.scene_max,
         )
     if not parts:
         log("ERROR", "Subtitles are too sparse to build any part")
@@ -162,7 +163,9 @@ def _scenes(item: dict, position: int, cues: list[Cue], start: float, end: float
         if listed:
             return listed
     lines = anchors if anchors is not None else [None] * len(beats)
-    return scenes.from_anchors(lines, beats, window, start, end, settings.scene_seconds)
+    lengths = scenes.estimate_lengths(beats, settings.scene_pad, settings.scene_min,
+                                      settings.scene_max)
+    return scenes.from_anchors(lines, beats, window, start, end, lengths)
 
 
 def _stage(item: dict, position: int, cues: list[Cue], duration: float,
