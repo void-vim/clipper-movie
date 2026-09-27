@@ -11,7 +11,6 @@ class Part:
     index: int
     start: float
     end: float
-    summary: str
     narration: str
     hook: str = ""
     beats: tuple[str, ...] = ()
@@ -30,7 +29,6 @@ class Part:
             "start_seconds": round(self.start, 3),
             "end_seconds": round(self.end, 3),
             "duration_seconds": round(self.duration, 3),
-            "summary": self.summary,
             "narration_script": list(self.beats) if self.beats else self.narration,
             "hook": self.hook,
             "scenes": [
@@ -45,9 +43,9 @@ class Part:
         return data
 
 
-def derive_hook(summary: str) -> str:
-    """First sentence of the summary, used as the short-form hook."""
-    text = " ".join(summary.split())
+def derive_hook(narration: str) -> str:
+    """First sentence of the narration, used as the short-form hook."""
+    text = " ".join(narration.split())
     for stop in (". ", "? ", "! "):
         if stop in text:
             text = text.split(stop)[0]

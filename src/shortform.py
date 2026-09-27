@@ -37,13 +37,13 @@ def build_chain(ass_path: Path, font_dir: Path | None, style: ShortStyle) -> str
 
 
 def render_vertical(
-    source: Path, out: Path, cues: list[Cue], hook: str, *, font_dir: Path | None,
-    style: ShortStyle | None = None,
+    source: Path, out: Path, cues: list[Cue], hook: str, *, duration: float,
+    font_dir: Path | None, style: ShortStyle | None = None,
 ) -> Path:
     """Re-render a finished part as a vertical short with burned-in captions."""
     style = style or ShortStyle()
     ass_path = out.with_suffix(".short.ass")
-    build_short_ass(ass_path, cues, hook, style)
+    build_short_ass(ass_path, cues, hook, duration, style)
     cmd = [
         "ffmpeg", "-y", "-i", str(source),
         "-filter_complex", build_chain(ass_path, font_dir, style),

@@ -4,6 +4,7 @@ __pycache__/
 .env
 output/
 input/*.mp4
+input/*.mkv
 input/*.srt
 tmp/
 result

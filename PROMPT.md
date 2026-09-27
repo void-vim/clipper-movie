@@ -53,43 +53,42 @@ NARRATION RULES
 15. Strip the "{" and "}" JSON characters from the spoken text. Do not use braces
     anywhere in the narration.
 
-SUMMARY RULES
-16. "summary" is one sentence, max 25 words, describing what happens in the segment.
-17. "hook" is one punchy teaser line, max 12 words, no quotation marks, used as the
+HOOK RULES
+16. "hook" is one punchy teaser line, max 12 words, no quotation marks, used as the
     headline of a short video.
 
 OUTPUT RULES
-18. Reply with the raw JSON array only. No prose before or after it, no markdown code
+17. Reply with the raw JSON array only. No prose before or after it, no markdown code
     fences, no comments, no explanation of what you did.
 
 NARRATION SCRIPT FORMAT
-19. "narration_script" MUST be an ARRAY OF STRINGS, never one long string. One array
+18. "narration_script" MUST be an ARRAY OF STRINGS, never one long string. One array
     element is one spoken beat, and each element becomes one spoken line and one subtitle
     caption in the finished video.
-20. Use 6 to 14 elements per segment. Each element is one sentence of at most 25 words,
+19. Use 6 to 14 elements per segment. Each element is one sentence of at most 25 words,
     written in the order it is spoken. All elements together must be 110 to 220 words.
-21. The first element is the hook line, every following element is one story beat.
-22. Never merge several sentences into one element, and never split one sentence across
+20. The first element is the hook line, every following element is one story beat.
+21. Never merge several sentences into one element, and never split one sentence across
     two elements.
-23. Every beat after the first must be about ONE specific moment of the segment, and it
+22. Every beat after the first must be about ONE specific moment of the segment, and it
     must quote or closely paraphrase the subtitle line of that moment. Each beat is played
     over the scene it describes, so a beat that could belong anywhere in the segment is
     useless.
-24. Beats must be in chronological order, and the same subtitle line must not be used by
+23. Beats must be in chronological order, and the same subtitle line must not be used by
     two beats.
-25. Optionally add "narration_timestamps": an array with one timestamp per beat, the cue
+24. Optionally add "narration_timestamps": an array with one timestamp per beat, the cue
     the beat is about. Omit the field and the tool will find the right line by matching
     the words of each beat against the subtitle cues.
 
 SCENES
-26. "scenes" is an ARRAY of short clips, each one 2 to 4 seconds long. The part is a
+25. "scenes" is an ARRAY of short clips, each one 2 to 4 seconds long. The part is a
     montage of these clips, so only a few seconds of the film is ever shown.
-27. Every scene must be inside the part's own start_timestamp and end_timestamp, must not
+26. Every scene must be inside the part's own start_timestamp and end_timestamp, must not
     overlap another scene, and must be listed in the order it is shown.
-28. List enough scenes to cover the whole narration, and no more: a 60 second narration
+27. List enough scenes to cover the whole narration, and no more: a 60 second narration
     needs 20 clips of 3 seconds, whether the segment is one minute or half an hour long.
     When the scenes are too short the tool repeats the last ones, which is the worst case.
-29. Every scene after the first shows the moment its beat talks about, and the scenes
+28. Every scene after the first shows the moment its beat talks about, and the scenes
     must follow the order of "narration_script". Spread the scenes over the whole segment
     instead of bunching them at its start.
 
@@ -100,7 +99,6 @@ Two parts of very different lengths, which is what a good segmentation looks lik
     "part_index": 1,
     "start_timestamp": "00:15:09,616",
     "end_timestamp": "00:16:52,384",
-    "summary": "One sentence about this segment.",
     "narration_script": [
       "Here is what happens next.",
       "Mara refuses to stay in the harbour a night longer.",
@@ -125,7 +123,6 @@ Two parts of very different lengths, which is what a good segmentation looks lik
     "part_index": 2,
     "start_timestamp": "00:40:09,616",
     "end_timestamp": "01:10:52,384",
-    "summary": "The crew crosses the desert and reaches the buried city.",
     "narration_script": [
       "Here is what happens next.",
       "The crew leaves the oasis before dawn, while the dunes are still cold.",

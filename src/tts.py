@@ -13,6 +13,8 @@ SENTENCE_RE = re.compile(r"(?<=[.!?])\s+")
 MAX_SEGMENT_CHARS = 220
 GAP_SECONDS = 0.28
 WORDS_PER_SECOND = 2.6
+TRIM_THRESHOLD_DB = -45.0
+TRIM_MARGIN_SECONDS = 0.06
 
 
 @dataclass(frozen=True)
@@ -78,6 +80,30 @@ def _load_chatterbox(device: str, ref: Path | None):
     return ChatterboxTTS.from_pretrained(device=device), ref_path
 
 
+def trim_edges(wav, sr: int):
+    """Drop the silence Chatterbox pads around speech.
+
+    The pads are not in the duration the schedule uses, so without this the caption
+    starts before the voice and the beat lengths drift.
+    """
+    rows = wav.detach().reshape(-1, wav.shape[-1])
+    peak = float(rows.abs().max())
+    if peak <= 0.0:
+        return wav
+    thresh = peak * (10 ** (TRIM_THRESHOLD_DB / 20))
+    loud = (rows.abs() > thresh).nonzero()
+    if loud.numel() == 0:
+        return wav
+    margin = int(TRIM_MARGIN_SECONDS * sr)
+    start = max(0, int(loud[:, 0].min()) - margin)
+    end = min(rows.shape[-1], int(loud[:, -1].max()) + 1 + margin)
+    if (start, end) == (0, rows.shape[-1]):
+        return wav
+    log("DEBUG", f"trimmed {(rows.shape[-1] - (end - start)) / sr:.2f}s of edge silence")
+    trimmed = rows[:, start:end]
+    return trimmed.reshape(wav.shape[:-1] + (end - start,))
+
+
 def _speak_chatterbox(sentences, device, ref, exaggeration, temperature, on_progress):
     model, ref_path = _load_chatterbox(device, ref)
     sr = model.sr
@@ -87,6 +113,7 @@ def _speak_chatterbox(sentences, device, ref, exaggeration, temperature, on_prog
             sentence, audio_prompt_path=ref_path,
             exaggeration=exaggeration, temperature=temperature,
         )
+        wav = trim_edges(wav, sr)
         spoken.append(_Spoken(sentence, wav.shape[1] / sr, wav))
         on_progress(i, len(sentences), sum(s.duration for s in spoken))
     return spoken, sr

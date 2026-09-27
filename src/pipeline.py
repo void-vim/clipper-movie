@@ -237,7 +237,7 @@ def render_shorts(results: list[PartResult], settings: Settings) -> None:
         with tolerate(settings, f"part_{r.part.index:02d} vertical render"):
             r.short = render_vertical(
                 r.video, r.folder / "short.mp4", captions, r.part.hook,
-                font_dir=settings.font_dir, style=ShortStyle(),
+                duration=r.duration, font_dir=settings.font_dir, style=ShortStyle(),
             )
 
 

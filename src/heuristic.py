@@ -133,15 +133,15 @@ def to_parts(cues: list[Cue], duration: float, lo: float, hi: float, target: flo
     parts: list[Part] = []
     for index, (start, end) in enumerate(segment(cues, duration, lo, hi, target), start=1):
         window = [c for c in cues if c.end > start and c.start < end]
-        summary, beats = write_recap(window, index, budget)
+        beats = write_recap(window, index, budget)
         anchors = [UNANCHORED if t is None else t for _, t in beats]
         clips = from_anchors(anchors, [t for t, _ in beats], window, start, end, scene_seconds)
+        narration = " ".join(t for t, _ in beats)
         parts.append(Part(
-            index=index, start=start, end=end, summary=summary,
-            narration=" ".join(t for t, _ in beats),
+            index=index, start=start, end=end, narration=narration,
             beats=tuple(t for t, _ in beats),
             anchors=tuple(anchors),
-            hook=derive_hook(summary),
+            hook=derive_hook(narration),
             scenes=tuple(clips),
         ))
     return renumber(parts)

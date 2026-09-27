@@ -12,8 +12,8 @@ FONT_NAME = "Coolvetica"
 SUB_SIZE = 64
 HOOK_SIZE = 70
 HOOK_TOP_MARGIN = 140
-SUB_BOTTOM_MARGIN = 420
-MAX_LINE_CHARS = 18
+SUB_BOTTOM_MARGIN = 500
+MAX_LINE_CHARS = 28
 
 HEADER = """[Script Info]
 ScriptType: v4.00+
@@ -38,6 +38,7 @@ class ShortStyle:
     height: int = 1920
     sub_size: int = SUB_SIZE
     hook_size: int = HOOK_SIZE
+    # How long one hook card stays on screen; the next one takes over right after.
     hook_seconds: float = 4.0
     hook_top_margin: int = HOOK_TOP_MARGIN
     sub_bottom_margin: int = SUB_BOTTOM_MARGIN
@@ -75,10 +76,21 @@ def wrap_text(text: str, max_chars: int) -> str:
     return r"\N".join(lines[:3])
 
 
-def _hook_event(hook: str, style: ShortStyle) -> str:
+def _hook_events(hook: str, style: ShortStyle, duration: float) -> list[str]:
+    """The hook as a chain of events, each one repeating for the whole video."""
     text = wrap_text(hook.upper(), style.max_line_chars + 4)
-    end = ass_time(style.hook_seconds)
-    return f"Dialogue: 1,0:00:00.00,{end},Hook,,0,0,0,,{text}"
+    step = max(0.5, style.hook_seconds)
+    if duration <= 0:
+        return [f"Dialogue: 1,0:00:00.00,{ass_time(step)},Hook,,0,0,0,,{text}"]
+    events: list[str] = []
+    start = 0.0
+    while start < duration:
+        end = min(duration, start + step)
+        events.append(
+            f"Dialogue: 1,{ass_time(start)},{ass_time(end)},Hook,,0,0,0,,{text}"
+        )
+        start += step
+    return events
 
 
 def _sub_events(cues: list[Cue], style: ShortStyle) -> list[str]:
@@ -95,7 +107,8 @@ def _sub_events(cues: list[Cue], style: ShortStyle) -> list[str]:
 
 
 def build_short_ass(
-    path: Path, cues: list[Cue], hook: str, style: ShortStyle | None = None,
+    path: Path, cues: list[Cue], hook: str, duration: float,
+    style: ShortStyle | None = None,
 ) -> Path:
     """Write an ASS file with a hook banner plus large narration subtitles."""
     style = style or ShortStyle()
@@ -106,7 +119,7 @@ def build_short_ass(
     )
     events: list[str] = []
     if hook:
-        events.append(_hook_event(hook, style))
+        events.extend(_hook_events(hook, style, duration))
     events.extend(_sub_events(cues, style))
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(header + "\n".join(events) + "\n", encoding="utf-8")

@@ -48,7 +48,8 @@ def _report(parts: list[Part]) -> None:
     for p in parts:
         log("INFO", (
             f"  part_{p.index:02d} {format_timestamp(p.start)} -> {format_timestamp(p.end)} "
-            f"({p.duration:.0f}s, {len(p.narration.split())} narration words) | {p.summary[:70]}"
+            f"({p.duration:.0f}s, {len(p.narration.split())} narration words) | "
+            f"{p.hook[:70]}"
         ))
 
 
@@ -111,22 +112,21 @@ def _snap(value: float, targets: list[float], label: str, prefer: str, warn) -> 
 
 
 def _beats(item: dict, position: int, window: list[Cue],
-           settings: Settings) -> tuple[list[str], str, list[float | None] | None]:
+           settings: Settings) -> tuple[list[str], list[float | None] | None]:
     """Read narration_script as an array of beats; a plain string is split up."""
     raw = item.get("narration_script")
     if isinstance(raw, list):
         beats = [" ".join(str(b).split()) for b in raw]
         beats = [b for b in beats if b]
         if beats:
-            return beats, " ".join(beats), _timestamps(item, len(beats))
+            return beats, _timestamps(item, len(beats))
         warn_msg = f"Part {position} has an empty narration_script array, rewriting it"
         log("WARN", warn_msg)
     elif isinstance(raw, str) and raw.strip():
         beats = split_script(raw)
-        return beats, " ".join(beats), _timestamps(item, len(beats))
-    summary, generated = write_recap(window, position, settings.narration_words)
-    texts = [t for t, _ in generated]
-    return texts, summary or " ".join(texts), [a for _, a in generated]
+        return beats, _timestamps(item, len(beats))
+    generated = write_recap(window, position, settings.narration_words)
+    return [t for t, _ in generated], [a for _, a in generated]
 
 
 def _timestamps(item: dict, count: int) -> list[float | None] | None:
@@ -181,15 +181,15 @@ def _stage(item: dict, position: int, cues: list[Cue], duration: float,
         warn(f"Part {position} has a zero length after snapping, dropped")
         return None
     window = [c for c in cues if c.end > start and c.start < end]
-    beats, narration, anchors = _beats(item, position, window, settings)
-    summary = str(item.get("summary", "")).strip() or narration.split(".")[0].strip()
-    hook = str(item.get("hook", "")).strip() or derive_hook(summary)
+    beats, anchors = _beats(item, position, window, settings)
+    narration = " ".join(beats)
+    hook = str(item.get("hook", "")).strip() or derive_hook(narration)
     clips = _scenes(item, position, cues, start, end, beats, anchors, settings, warn)
     if not clips:
         warn(f"Part {position} has no scene to show, dropped")
         return None
-    return Part(index=position, start=start, end=end, summary=summary,
-                narration=narration, hook=hook, beats=tuple(beats),
+    return Part(index=position, start=start, end=end, narration=narration, hook=hook,
+                beats=tuple(beats),
                 anchors=tuple(UNANCHORED if a is None else a for a in (anchors or [])),
                 scenes=tuple(clips))
 

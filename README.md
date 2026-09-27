@@ -36,7 +36,6 @@ python main.py --video movie.mp4 --subtitle movie.srt --plan plan.json
     "part_index": 1,
     "start_timestamp": "00:00:00,000",
     "end_timestamp": "00:03:15,420",
-    "summary": "Brief text summary of this segment.",
     "narration_script": [
       "Here is what happens next.",
       "Mara refuses to stay in the harbour a night longer.",
@@ -53,8 +52,8 @@ python main.py --video movie.mp4 --subtitle movie.srt --plan plan.json
 
 - `part_index` is ignored, parts are renumbered in start order.
 - `start_seconds` / `end_seconds` work as an alternative to the timestamps.
-- The part range is the story segment: it gives the narrator its lines and the context for
-  the summary. The video is built only from `scenes`, so the range can be much longer than
+- The part range is the story segment: it gives the narrator its lines and the dialogue
+  to quote. The video is built only from `scenes`, so the range can be much longer than
   the finished part.
 - Timestamps snap to the nearest subtitle cue (starts forward, ends backward) so a clip
   never cuts a sentence in half.
@@ -71,7 +70,7 @@ python main.py --video movie.mp4 --subtitle movie.srt --plan plan.json
   plain string is also accepted and split into sentences.
 - `narration_timestamps` is optional, one timestamp per beat. Omit it and the tool finds
   the right subtitle line by matching the words of each beat.
-- `summary`, `narration_script` and `hook` are optional: anything missing is generated
+- `narration_script` and `hook` are optional: anything missing is generated
   from the dialogue of that part.
 
 ## Pipeline

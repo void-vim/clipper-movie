@@ -111,14 +111,14 @@ def _pick_lines(window: list[Cue], limit: int, budget: int) -> list[Cue]:
 
 
 def write_recap(window: list[Cue], index: int,
-                budget: int = DEFAULT_WORDS) -> tuple[str, list[tuple[str, float | None]]]:
-    """Return (summary, beats) built only from the part's own dialogue.
+                budget: int = DEFAULT_WORDS) -> list[tuple[str, float | None]]:
+    """Return the beats, built only from the part's own dialogue.
 
     Each beat is (text, anchor) where anchor is the timestamp of the subtitle cue
     the beat talks about, so the recap plays while that scene is on screen.
     """
     if not window:
-        return "", []
+        return []
     lines = _pick_lines(window, max_lines_for(budget), budget)
     if not lines:
         lines = window[:2]
@@ -135,5 +135,4 @@ def write_recap(window: list[Cue], index: int,
             connector = CONNECTORS[(index + i) % len(CONNECTORS)]
             beats.append((f"{connector} {text}", cue.start))
     beats.append((CLOSERS[(index - 1) % len(CLOSERS)], None))
-    summary = f"{beats[0][0]} {beats[1][0]}" if len(beats) > 1 else beats[0][0]
-    return summary, beats
+    return beats
