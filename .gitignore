@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+output/
+input/*.mp4
+input/*.srt
+tmp/
+result

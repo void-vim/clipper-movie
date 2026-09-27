@@ -1,0 +1,24 @@
+[
+{
+"part_index": 1,
+"start_timestamp": "00:00:21,020",
+"end_timestamp": "00:15:00,774",
+"summary": "Hiccup tries to prove himself during a dragon raid on Berk, accidentally shooting down a mysterious Night Fury.",
+"narration_script": [
+"Berk is a sturdy village where we do not run from dragon fights.",
+"Young Hiccup wants to show his worth, but he always ends up in the way.",
+"Chief Stoick leads the warriors to protect the food stores from the beasts."
+],
+"scenes": [
+{"start_timestamp": "00:00:21,020", "end_timestamp": "00:00:24,020"},
+{"start_timestamp": "00:01:31,882", "end_timestamp": "00:01:34,882"},
+{"start_timestamp": "00:03:06,974", "end_timestamp": "00:03:09,974"}
+],
+"narration_timestamps": [
+"00:00:21,020",
+"00:01:31,882",
+"00:03:06,974"
+],
+"hook": "Berk is a sturdy village where we do not run from dragon fights."
+}
+]
