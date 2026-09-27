@@ -15,29 +15,29 @@ OUTPUT FORMAT
 
 SEGMENTATION RULES
 1. Cut on natural story boundaries: the end of a scene, a change of location, a major
-   conversation finishing, a long silence, a title card, a song ending.
+    conversation finishing, a long silence, a title card, a song ending.
 2. Never split in the middle of a sentence or a conversation beat.
 3. The length of a segment follows the story, never a target number. A segment can be
-   under a minute or run for half an hour: a single sharp exchange can stand alone, and a
-   whole chase, trial, journey or act belongs in one piece. A quiet stretch can be short
-   because there is little to say, and a long stretch can be long because cutting it
-   would break the story. Never split a scene to make a segment shorter, and never join
-   two unrelated stretches to make one longer.
+    under a minute or run for half an hour: a single sharp exchange can stand alone, and a
+    whole chase, trial, journey or act belongs in one piece. A quiet stretch can be short
+    because there is little to say, and a long stretch can be long because cutting it
+    would break the story. Never split a scene to make a segment shorter, and never join
+    two unrelated stretches to make one longer.
 4. One segment is one continuous piece of the story. If two stretches would be told by
-   the same recap, they are one segment. If they need different recaps, they are two.
+    the same recap, they are one segment. If they need different recaps, they are two.
 5. Do not force a number of segments. Cover the cues you were given from the first to
-   the last one.
+    the last one.
 6. Timestamps must be copied VERBATIM from the cues above, including the milliseconds.
-   Never invent, round, or retype a timestamp.
+    Never invent, round, or retype a timestamp.
 7. Timestamps are ABSOLUTE positions in the film, never relative to the chunk you were
-   given. If you were given the cues from 00:40:00 to 01:10:00, the first part still
-   starts at 00:40:00, not at 00:00:00. This is what lets several answers be combined
-   into one plan for the whole film.
+    given. If you were given the cues from 00:40:00 to 01:10:00, the first part still
+    starts at 00:40:00, not at 00:00:00. This is what lets several answers be combined
+    into one plan for the whole film.
 8. The segments must be in chronological order and must not overlap.
 
 NARRATION RULES
-9. Every segment gets one recap, 45 to 90 seconds long when spoken, which is 110 to 220
-   words. Aim for 160 words. Never write fewer than 110 words.
+9. Every segment gets one recap, 60 to 120 seconds long when spoken, which is 150 to 300
+    words. Aim for 220 words. Never write fewer than 150 words.
 10. The recap is played over the segment itself, one beat at a time, each beat starting on
     the scene it describes. The segment's own audio is not part of the output, so the
     recap is the only sound.
@@ -65,8 +65,8 @@ NARRATION SCRIPT FORMAT
 18. "narration_script" MUST be an ARRAY OF STRINGS, never one long string. One array
     element is one spoken beat, and each element becomes one spoken line and one subtitle
     caption in the finished video.
-19. Use 6 to 14 elements per segment. Each element is one sentence of at most 25 words,
-    written in the order it is spoken. All elements together must be 110 to 220 words.
+19. Use 20 to 40 elements per segment. Each element is one sentence of at most 25 words,
+    written in the order it is spoken. All elements together must be 150 to 300 words.
 20. The first element is the hook line, every following element is one story beat.
 21. Never merge several sentences into one element, and never split one sentence across
     two elements.
@@ -85,8 +85,8 @@ SCENES
     montage of these clips, so only a few seconds of the film is ever shown.
 26. Every scene must be inside the part's own start_timestamp and end_timestamp, must not
     overlap another scene, and must be listed in the order it is shown.
-27. List enough scenes to cover the whole narration, and no more: a 60 second narration
-    needs 20 clips of 3 seconds, whether the segment is one minute or half an hour long.
+27. List enough scenes to cover the whole narration, and no more: a 90 second narration
+    needs 30 clips of 3 seconds, whether the segment is one minute or half an hour long.
     When the scenes are too short the tool repeats the last ones, which is the worst case.
 28. Every scene after the first shows the moment its beat talks about, and the scenes
     must follow the order of "narration_script". Spread the scenes over the whole segment

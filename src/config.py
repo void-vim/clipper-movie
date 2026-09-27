@@ -8,6 +8,7 @@ from pathlib import Path
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT_DIR = PROJECT_DIR / "output"
 DEFAULT_FONT_DIR = PROJECT_DIR / "input" / "font"
+PLAN_FILE = PROJECT_DIR / "plan.json"
 
 STAGE_TOTAL = 5
 
@@ -17,7 +18,7 @@ class Settings:
     video: Path
     subtitle: Path
     output_root: Path = DEFAULT_OUTPUT_DIR
-    plan_file: Path | None = None
+    plan_file: Path | None = PLAN_FILE if PLAN_FILE.is_file() else None
     min_part: float = 60.0
     max_part: float = 300.0
     device: str = "cpu"
@@ -30,34 +31,15 @@ class Settings:
     scene_seconds: float = 3.0
     font_dir: Path | None = None
     keep_going: bool = False
-    dry_run: bool = False
     debug: bool = False
     warnings: list[str] = field(default_factory=list)
 
     @classmethod
     def from_args(cls, args) -> "Settings":
-        font_dir = Path(args.font_dir) if args.font_dir else None
-        if font_dir is None and DEFAULT_FONT_DIR.is_dir():
-            font_dir = DEFAULT_FONT_DIR
         return cls(
             video=Path(args.video).expanduser().resolve(),
             subtitle=Path(args.subtitle).expanduser().resolve(),
-            output_root=Path(args.output).expanduser().resolve(),
-            plan_file=Path(args.plan).expanduser().resolve() if args.plan else None,
-            min_part=args.min_part,
-            max_part=args.max_part,
-            device=args.device,
-            tts_engine=args.tts_engine,
-            ref_audio=Path(args.ref).expanduser().resolve() if args.ref else None,
-            exaggeration=args.exaggeration,
-            temperature=args.temperature,
-            narration_delay=args.narration_delay,
-            narration_words=args.narration_words,
-            scene_seconds=args.scene_seconds,
-            font_dir=font_dir,
-            keep_going=args.keep_going,
-            dry_run=args.dry_run,
-            debug=args.debug,
+            font_dir=DEFAULT_FONT_DIR if DEFAULT_FONT_DIR.is_dir() else None,
         )
 
     @property

@@ -18,17 +18,15 @@ nix develop          # creates .venv, installs Chatterbox, ffmpeg, espeak-ng
 # Parts plus a 9:16 vertical short.mp4 (fit + black padding, hook, burned-in subtitles)
 python main.py movie.mp4 movie.srt
 python main.py --video movie.mp4 --subtitle movie.srt
-
-# Plan only, no TTS or rendering
-python main.py --video movie.mp4 --subtitle movie.srt --dry-run
-
-# Render your own parts instead of the automatic segmentation
-python main.py --video movie.mp4 --subtitle movie.srt --plan plan.json
 ```
+
+Those two inputs are the only arguments. Everything else is hardcoded in
+`src/config.py` (output directory, part lengths, TTS engine and voice, scene length,
+narration delay, caption font).
 
 ## Plan file
 
-`--plan FILE` takes a JSON array and skips segmentation entirely:
+`plan.json` in the project root is read when it exists, and segmentation is skipped:
 
 ```json
 [
@@ -83,7 +81,7 @@ python main.py --video movie.mp4 --subtitle movie.srt --plan plan.json
 [5/5] Exporting final parts...
 ```
 
-1. `src/planner.py` either reads your `--plan` JSON or falls back to `src/heuristic.py`,
+1. `src/planner.py` either reads the project `plan.json` or falls back to `src/heuristic.py`,
    which scores every subtitle cue start as a possible
    cut: silence before the cue, whether the previous line finished a sentence, and how
    close the cut lands to the target part length. Scene changes can cut below the minimum
@@ -95,7 +93,7 @@ python main.py --video movie.mp4 --subtitle movie.srt --plan plan.json
 3. `src/tts.py` speaks each beat separately with Chatterbox (optionally cloning a
    reference voice) and records its timing, so every beat becomes one subtitle caption.
 4. `src/scenes.py` decides the clips a part shows: the `scenes` array of the plan, or one
-   clip of `--scene-seconds` around the line each beat quotes. `src/schedule.py` starts
+   clip of `scene_seconds` around the line each beat quotes. `src/schedule.py` starts
    beat i on scene i, repeats clips when the recap outlasts them, and drops the clips the
    recap never reaches.
 5. `src/render.py` concatenates the clips into one silent montage, `src/mixer.py` drops
@@ -105,49 +103,50 @@ python main.py --video movie.mp4 --subtitle movie.srt --plan plan.json
 ## Output
 
 ```
-output/            (--output DIR, default ./output)
+output/            (output_root in src/config.py, default ./output)
 ├── manifest.json
 ├── plan.json
 ├── part_01/
-│   ├── video.mp4
+│   ├── short.mp4
 │   ├── narration.mp3
 │   ├── narration.srt
 │   └── subtitle.srt
 └── part_02/ ...
 ```
 
-The output directory is used as it is, with no folder per movie inside it: pass
-`--output result/hobbit` when you want one directory per film. Writing a second movie
-into the same directory overwrites the part folders, and the tool says so before it
-starts.
+The output directory is used as it is, with no folder per movie inside it: set
+`output_root` in `src/config.py` (for example `result/hobbit`) when you want one
+directory per film. Writing a second movie into the same directory overwrites the part
+folders, and the tool says so before it starts.
 
-Each part folder also gets `short.mp4`: the frame fitted into 9:16, centered, with
-black padding and burned-in captions.
+`video.mp4` is an intermediate: the montage in the source aspect, used as the input of
+`short.mp4`. It is deleted once `short.mp4` is rendered.
 
 ## Options
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--plan FILE` | none | render these parts instead of segmenting automatically |
-| `--output DIR` | `./output` | where the part folders are written |
-| `--min-part` / `--max-part` | 60 / 300 | story segment length in seconds, before trimming |
-| `--narration-words` | 200 | upper bound on recap length in words (see `PROMPT.md`) |
-| `--tts-engine chatterbox\|silent` | `chatterbox` | `silent` is for pipeline testing only |
-| `--ref` | none | reference wav to clone the narrator voice |
-| `--device` | `cpu` | TTS device (`cuda` is much faster) |
-| `--scene-seconds` | 3.0 | length of a scene clip when the plan does not list them |
-| `--narration-delay` | 1.0 | earliest a beat may start, the rest follow their scenes |
-| `--font-dir` | `input/font` | caption font directory |
-| `--dry-run`, `--keep-going`, `--debug` | off | plan only, continue past failures, verbose ffmpeg |
+Only the video and the subtitle are arguments. The rest is hardcoded in `src/config.py`:
+
+| Setting | Value | Description |
+|---------|-------|-------------|
+| `plan_file` | `plan.json` if it exists | renders those parts instead of segmenting automatically |
+| `output_root` | `./output` | where the part folders are written |
+| `min_part` / `max_part` | 60 / 300 | story segment length in seconds, before trimming |
+| `narration_words` | 200 | upper bound on recap length in words (see `PROMPT.md`) |
+| `tts_engine` | `chatterbox` | set to `silent` for pipeline testing only |
+| `ref_audio` | none | reference wav to clone the narrator voice |
+| `device` | `cpu` | TTS device (`cuda` is much faster) |
+| `scene_seconds` | 3.0 | length of a scene clip when the plan does not list them |
+| `narration_delay` | 1.0 | earliest a beat may start, the rest follow their scenes |
+| `font_dir` | `input/font` | caption font directory |
 
 ## Notes
 
 - Chatterbox on CPU is slow (roughly a minute of narration per minute generated). Use
-  `--device cuda` when a GPU is available. Chatterbox also prints its own sampling
-  progress bars, which are not part of this tool's log format.
+  `device` in `src/config.py` set to `cuda` when a GPU is available. Chatterbox also prints
+  its own sampling progress bars, which are not part of this tool's log format.
 - The narration is a digest of the real dialogue, so it can only be as interesting as the
   lines the script picks.
-- Longer recaps come from `--narration-words`, and are limited by how many distinct lines
+- Longer recaps come from `narration_words`, and are limited by how many distinct lines
   a segment actually contains.
 - A plan whose `scenes` do not cover the recap ends up with repeated clips, which is
   visible; list roughly `recap seconds / 3` scenes instead.

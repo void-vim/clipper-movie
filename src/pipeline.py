@@ -71,13 +71,14 @@ class PartResult:
             for p in self.placed
         ]
         files = {
-            "video": self.video,
             "narration": self.narration,
             "narration_srt": self.folder / "narration.srt",
             "subtitle_srt": self.folder / "subtitle.srt",
         }
         if self.short:
             files["short"] = self.short
+        if self.video:
+            files["video"] = self.video
         data["files"] = {k: Path(v).name for k, v in files.items()}
         return data
 
@@ -90,13 +91,13 @@ def part_folder(work_dir: Path, index: int) -> Path:
 
 @contextmanager
 def tolerate(settings: Settings, label: str):
-    """Swallow a per-part failure only when --keep-going is set."""
+    """Swallow a per-part failure only when keep_going is set in src/config.py."""
     try:
         yield
     except SystemExit:
         if not settings.keep_going:
             raise
-        log("ERROR", f"{label} failed; skipping it because --keep-going is set")
+        log("ERROR", f"{label} failed; skipping it because keep_going is set")
 
 
 def new_results(plan: list[Part], work_dir: Path) -> list[PartResult]:
@@ -239,6 +240,9 @@ def render_shorts(results: list[PartResult], settings: Settings) -> None:
                 r.video, r.folder / "short.mp4", captions, r.part.hook,
                 duration=r.duration, font_dir=settings.font_dir, style=ShortStyle(),
             )
+        if r.short is not None:
+            r.video.unlink(missing_ok=True)
+            r.video = None
 
 
 def write_manifest(settings: Settings, results: list[PartResult], info: MediaInfo) -> Path:
@@ -266,11 +270,11 @@ def verify(results: list[PartResult]) -> None:
         names = ", ".join(f"part_{r.part.index:02d}" for r in failed)
         log("ERROR", f"{len(failed)} part(s) failed: {names}")
     for r in results:
-        if r.failed or r.video is None:
+        if r.failed or r.short is None:
             continue
-        if not r.video.is_file() or r.video.stat().st_size == 0:
-            log("ERROR", f"Missing or empty output video: {r.video}")
+        if not r.short.is_file() or r.short.stat().st_size == 0:
+            log("ERROR", f"Missing or empty output video: {r.short}")
             raise SystemExit(1)
-        got = probe(r.video).duration
+        got = probe(r.short).duration
         if abs(got - r.duration) > 1.5:
-            log("WARN", f"{r.video.name} is {got:.1f}s, expected {r.duration:.1f}s")
+            log("WARN", f"{r.short.name} is {got:.1f}s, expected {r.duration:.1f}s")
