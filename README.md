@@ -4,8 +4,6 @@ Split a movie into recap parts using subtitle structure, local TTS, and ffmpeg. 
 part is a montage of a few seconds of the film, cut to run exactly as long as its recap,
 with the movie audio dropped.
 
-Everything runs locally: no API key, no LLM, no network.
-
 ## Setup
 
 ```bash
